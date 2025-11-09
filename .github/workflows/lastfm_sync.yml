@@ -1,4 +1,4 @@
-name: Last.FM sync
+name: Last.fm sync
 
 on:
   schedule:

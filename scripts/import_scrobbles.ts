@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
 
+console.log("SB_URL:", process.env["SB_URL"] ? "✅ set" : "❌ missing");
 const supabase = createClient(process.env["SB_URL"]!, process.env["SB_SECRET"]!);
 
 const importScrobbles = async () => {
