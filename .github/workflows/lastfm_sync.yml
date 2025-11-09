@@ -17,7 +17,7 @@ jobs:
 
       - run: cd scripts && npm install
 
-      - run: cd scripts && npx ts-node --esm import_scrobbles.ts
+      - run: cd scripts && npx tsx import_scrobbles.ts
         env:
           SB_URL: ${{ secrets.SB_URL }}
           SB_SECRET: ${{ secrets.SB_SECRET }}
