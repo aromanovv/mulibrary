@@ -1,4 +1,4 @@
-name: Import Scrobbles
+name: Last.FM sync
 
 on:
   schedule:
