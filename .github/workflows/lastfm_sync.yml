@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
 
       - run: npx ts import_scobbles.ts
         env:
