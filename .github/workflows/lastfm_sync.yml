@@ -15,9 +15,9 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm ci
+      - run: cd scripts && npm ci
 
-      - run: npx ts import_scobbles.ts
+      - run: cd scripts && npx ts import_scobbles.ts
         env:
           SB_URL: ${{ secrets.SB_URL }}
           SB_SECRET: ${{ secrets.SB_SECRET }}
