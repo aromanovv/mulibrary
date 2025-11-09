@@ -1,0 +1,26 @@
+name: Import Scrobbles
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 09:00 UTC
+  workflow_dispatch: 
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - run: npx ts import_scobbles.ts
+        env:
+          SB_URL: ${{ secrets.SB_URL }}
+          SB_SECRET: ${{ secrets.SB_SECRET }}
+          LFM_KEY: ${{ secrets.LFM_KEY }}
+          LFM_TOKEN: ${{ secrets.LFM_TOKEN }}
+          LFM_USER: ${{ secrets.LFM_USER }}
