@@ -5,7 +5,7 @@
       type="text"
       [formControl]="searchControl"
       placeholder="Search artists and albums..."
-      class="w-full overflow-clip text-ellipsis text-sm h-9 px-4 py-3 pr-10 bg-neutral-800 rounded-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+      class="w-full overflow-clip text-ellipsis text-sm h-9 px-4 py-3 pr-10 bg-neutral-800 rounded-xs focus:outline-hidden focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition-colors"
     />
 
     <!-- Search Icon -->
@@ -24,7 +24,7 @@
   <!-- Results Container (same width as search input) -->
   <div
     *ngIf="showResults && (searchResults$ | async) as results"
-    class="mt-2 border border-neutral-600 rounded-lg shadow-sm absolute bg-neutral-900 z-20"
+    class="mt-2 border border-neutral-600 rounded-lg shadow-xs absolute bg-neutral-900 z-20"
   >
     <!-- Artists -->
     <div *ngIf="results.artists.length > 0" class="p-4 border-b border-neutral-600">
@@ -32,7 +32,7 @@
       <div class="space-y-1 text-sm">
         <div
           *ngFor="let artist of results.artists"
-          class="p-2 hover:bg-gray-500 rounded cursor-pointer flex items-center"
+          class="p-2 hover:bg-gray-500 rounded-sm cursor-pointer flex items-center"
           (click)="navigateToArtistPage(artist.name)"
         >
           <div class="font-medium">{{ artist.name }}</div>
@@ -46,7 +46,7 @@
       <div class="space-y-1 text-sm">
         <div
           *ngFor="let album of results.albums"
-          class="p-2 hover:bg-gray-500 rounded cursor-pointer flex flex-col"
+          class="p-2 hover:bg-gray-500 rounded-sm cursor-pointer flex flex-col"
           (click)="navigateToAlbumPage(album.artist!, album.name)"
         >
           <div class="font-medium">{{ album.name }}</div>

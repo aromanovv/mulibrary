@@ -1,6 +1,41 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@theme {
+  --color-background: rgb(var(--color-bg));
+  --color-surface: rgb(var(--color-bg-surface));
+  --color-foreground: rgb(var(--color-fg));
+  --color-border: rgb(var(--color-border-raw));
+  --color-primary: rgb(var(--color-primary-raw));
+  --color-primary-light: rgb(var(--color-primary-light-raw));
+  --color-primary-dark: rgb(var(--color-primary-dark-raw));
+  --color-secondary: rgb(var(--color-secondary-raw));
+  --color-secondary-light: rgb(var(--color-secondary-light-raw));
+  --color-secondary-dark: rgb(var(--color-secondary-dark-raw));
+  --color-warning: rgb(var(--color-warning-raw));
+  --color-warning-light: rgb(var(--color-warning-light-raw));
+  --color-warning-dark: rgb(var(--color-warning-dark-raw));
+  --color-info: rgb(var(--color-info-raw));
+  --color-info-light: rgb(var(--color-info-light-raw));
+  --color-info-dark: rgb(var(--color-info-dark-raw));
+  --font-sans:
+    Inter var, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+  }
+}
 
 html,
 body {
@@ -9,69 +44,55 @@ body {
 
 :root {
   /* Background & Foreground */
-  --color-bg: 255 255 255; /* Light background */
-  --color-surface: 245 245 245; /* Slightly darker for cards */
-  --color-foreground: 15 23 42; /* Dark text */
-  --color-border: 203 213 225; /* Neutral border */
+  --color-bg: 255 255 255;
+  --color-bg-surface: 245 245 245;
+  --color-fg: 15 23 42;
+  --color-border-raw: 203 213 225;
 
   /* Primary (Teal) */
-  --color-primary: 19 78 74;
-  --color-primary-light: 45 135 130;
-  --color-primary-dark: 12 57 54;
+  --color-primary-raw: 19 78 74;
+  --color-primary-light-raw: 45 135 130;
+  --color-primary-dark-raw: 12 57 54;
 
   /* Secondary (Indigo) */
-  --color-secondary: 79 70 229;
-  --color-secondary-light: 99 102 241;
-  --color-secondary-dark: 55 48 163;
+  --color-secondary-raw: 79 70 229;
+  --color-secondary-light-raw: 99 102 241;
+  --color-secondary-dark-raw: 55 48 163;
 
   /* Warning (Amber) */
-  --color-warning: 245 158 11;
-  --color-warning-light: 251 191 36;
-  --color-warning-dark: 180 83 9;
+  --color-warning-raw: 245 158 11;
+  --color-warning-light-raw: 251 191 36;
+  --color-warning-dark-raw: 180 83 9;
 
   /* Info (Sky Blue) */
-  --color-info: 14 165 233;
-  --color-info-light: 56 189 248;
-  --color-info-dark: 3 105 161;
+  --color-info-raw: 14 165 233;
+  --color-info-light-raw: 56 189 248;
+  --color-info-dark-raw: 3 105 161;
 }
 
 [data-theme="dark"] {
   --color-bg: 23 23 23;
-  --color-surface: 38 38 38;
-  --color-foreground: 214 211 209;
-  --color-border: 64 64 64;
+  --color-bg-surface: 38 38 38;
+  --color-fg: 214 211 209;
+  --color-border-raw: 64 64 64;
 
-  /* Keep accents but adjust contrast */
-  --color-primary: 45 135 130;
-  --color-primary-light: 64 163 158;
-  --color-primary-dark: 19 78 74;
+  /* Primary (Teal) */
+  --color-primary-raw: 45 135 130;
+  --color-primary-light-raw: 64 163 158;
+  --color-primary-dark-raw: 19 78 74;
 
-  --color-secondary: 129 140 248;
-  --color-secondary-light: 165 180 252;
-  --color-secondary-dark: 79 70 229;
+  /* Secondary (Indigo) */
+  --color-secondary-raw: 129 140 248;
+  --color-secondary-light-raw: 165 180 252;
+  --color-secondary-dark-raw: 79 70 229;
 
-  --color-warning: 251 191 36;
-  --color-warning-light: 253 224 71;
-  --color-warning-dark: 202 138 4;
+  /* Warning (Amber) */
+  --color-warning-raw: 251 191 36;
+  --color-warning-light-raw: 253 224 71;
+  --color-warning-dark-raw: 202 138 4;
 
-  --color-info: 56 189 248;
-  --color-info-light: 125 211 252;
-  --color-info-dark: 14 165 233;
+  /* Info (Sky Blue) */
+  --color-info-raw: 56 189 248;
+  --color-info-light-raw: 125 211 252;
+  --color-info-dark-raw: 14 165 233;
 }
-
-body {
-  margin: 0;
-  font-family: "Inter", "Helvetica Neue", sans-serif;
-  @apply bg-background text-foreground;
-}
-
-/* a {
-  @apply text-accent;
-  filter: brightness(1.8);
-}
-
-a:hover {
-  @apply text-primary;
-  filter: brightness(2);
-}
- */

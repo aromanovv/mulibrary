@@ -94,7 +94,7 @@
           <div class="text-sm w-[40px] ml-auto">{{ track.playcount }}</div>
           <div class="w-5/6">
             <div
-              class="bar bg-teal-900 h-3 mt-[1px]"
+              class="bar bg-teal-900 h-3 mt-px"
               [style.width.%]="calculateBarWidth(tracks, track.playcount)"
             ></div>
           </div>
@@ -107,7 +107,7 @@
   <!-- LISTENING HISTORY -->
   <div class="flex">
     <div class="w-2/3"></div>
-    <div class="chart-container max-w-md h-[30rem] mb-14">
+    <div class="chart-container max-w-md h-120 mb-14">
       <canvas id="albumScrobblesByYear">{{ chart }}</canvas>
     </div>
   </div>

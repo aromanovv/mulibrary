@@ -16,7 +16,7 @@
               type="email"
               formControlName="email"
               placeholder="Enter your email"
-              class="w-full text-sm h-11 px-4 py-3 border bg-neutral-900 border-neutral-600 rounded-sm text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+              class="w-full text-sm h-11 px-4 py-3 border bg-neutral-900 border-neutral-600 rounded-xs text-white placeholder-stone-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
               [class.border-red-500]="isFieldInvalid('email')"
             />
             <!-- Email Icon -->
@@ -47,14 +47,14 @@
               [type]="showPassword ? 'text' : 'password'"
               formControlName="password"
               placeholder="Enter your password"
-              class="w-full text-sm h-11 px-4 py-3 pr-12 border bg-neutral-900 border-neutral-600 rounded-sm text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+              class="w-full text-sm h-11 px-4 py-3 pr-12 border bg-neutral-900 border-neutral-600 rounded-xs text-white placeholder-stone-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
               [class.border-red-500]="isFieldInvalid('password')"
             />
             <!-- Password Toggle -->
             <button
               type="button"
               (click)="togglePasswordVisibility()"
-              class="absolute right-3 top-3 text-stone-400 hover:text-white focus:outline-none"
+              class="absolute right-3 top-3 text-stone-400 hover:text-white focus:outline-hidden"
             >
               <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -91,7 +91,7 @@
         <button
           type="submit"
           [disabled]="loginForm.invalid || loading"
-          class="w-full h-11 px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium rounded-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-neutral-900 transition-colors"
+          class="w-full h-11 px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white font-medium rounded-xs focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-neutral-900 transition-colors"
         >
           <span *ngIf="!loading">Sign In</span>
           <span *ngIf="loading" class="flex items-center justify-center">
@@ -113,7 +113,7 @@
         </button>
 
         <!-- Error Message -->
-        <div *ngIf="errorMessage" class="p-3 bg-red-900/50 border border-red-600 rounded-sm">
+        <div *ngIf="errorMessage" class="p-3 bg-red-900/50 border border-red-600 rounded-xs">
           <div class="flex items-center">
             <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Success Message -->
-        <div *ngIf="successMessage" class="p-3 bg-green-900/50 border border-green-600 rounded-sm">
+        <div *ngIf="successMessage" class="p-3 bg-green-900/50 border border-green-600 rounded-xs">
           <div class="flex items-center">
             <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
