@@ -54,14 +54,25 @@ export class TotalListensChartComponent implements OnInit, AfterViewInit {
     const endYear = this.endDate.getFullYear();
     const ticks = [];
 
-    // Calculate position for January 1st of every year
+    // Determine interval step based on screen width
+    let step = 1;
+    if (this.containerWidth < 500) {
+      step = 3; // Mobile: show every 3rd year
+    } else if (this.containerWidth < 768) {
+      step = 2; // Tablet: show every 2nd year
+    }
+
+    // Calculate position for January 1st of the years in range
     for (let year = startYear; year <= endYear; year++) {
       const monthDiff = (year - startYear) * 12 - this.startDate.getMonth();
 
-      // Only include it if it falls within the slider's valid range
-      if (monthDiff >= 0 && monthDiff <= this.totalMonths) {
-        const positionPct = (monthDiff / this.totalMonths) * 100;
-        ticks.push({ label: year.toString(), positionPct });
+      // Only include it if it falls strictly inside the slider's valid range
+      if (monthDiff > 0 && monthDiff <= this.totalMonths) {
+        // Base the interval on the first visible year (2010) to keep the cadence clean
+        if ((year - (startYear + 1)) % step === 0) {
+          const positionPct = (monthDiff / this.totalMonths) * 100;
+          ticks.push({ label: year.toString(), positionPct });
+        }
       }
     }
 
@@ -107,6 +118,7 @@ export class TotalListensChartComponent implements OnInit, AfterViewInit {
   @HostListener("window:resize", ["$event"])
   onResize(event: any) {
     this.containerWidth = event.target.innerWidth;
+    this.generateTicks();
   }
 
   updateTooltipTexts(value: number[]) {
