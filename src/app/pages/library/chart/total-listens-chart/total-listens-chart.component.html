@@ -1,0 +1,29 @@
+<div class="relative h-2 w-full max-w-360 mx-auto overflow-visible mb-30 group">
+  <div class="absolute left-0 right-0 h-2 bg-neutral-900"></div>
+
+  @if (data && points) {}
+  <div id="range-slider" class="absolute! w-full! h-8! z-10!"></div>
+
+  <div class="absolute top-8 left-0 right-0 h-6 pointer-events-none">
+    @for (tick of ticks; track tick.label) {
+      <div
+        class="mt-2 absolute flex flex-col items-center transform -translate-x-1/2"
+        [style.left.%]="tick.positionPct"
+      >
+        <div class="h-1.5 w-px bg-neutral-600"></div>
+        <span class="text-[10px] text-neutral-400 mt-1 select-none">{{ tick.label }}</span>
+      </div>
+    }
+  </div>
+
+  <!--   <div
+    class="absolute left-0 right-0 pointer-events-none -mt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+  >
+    <div class="absolute left-0 text-neutral-200 text-xs py-1 rounded-sm z-50 whitespace-nowrap">
+      {{ leftTooltipText }}
+    </div>
+    <div class="absolute right-0 text-neutral-200 text-xs py-1 rounded-sm z-50 whitespace-nowrap">
+      {{ rightTooltipText }}
+    </div>
+  </div> -->
+</div>

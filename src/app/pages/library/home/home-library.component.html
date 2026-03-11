@@ -1,44 +1,47 @@
-<app-category-chart></app-category-chart>
+<div
+  class="pl-4 pr-4 md:pl-8 md:pr-8 md:mb-8 flex-1 bg-neutral-900 max-w-360 max-h-[calc(100%-80px)] ml-auto! mr-auto!"
+>
+  <app-category-chart></app-category-chart>
+  <app-total-listens-chart></app-total-listens-chart>
 
-<div class="md:columns-2 2xl:columns-3 sm:columns-1 lg:gap-16 2xl:gap-20 md:gap-10">
-  <div class="masonry-item">
-    <h1 class="text-xl font-semibold mb-3">Recently played</h1>
-    <div class="flex text-stone-400 mb-2">
-      <div class="w-[40%] text-xs">Artist</div>
-      <div class="w-[45%] text-xs">Track</div>
-      <!--       <div class="w-1/3 text-xs">Album</div> -->
-      <div class="text-xs w-[15%] text-right">Time</div>
+  <div class="md:columns-2 sm:columns-1 lg:gap-16 md:gap-10">
+    <div class="masonry-item">
+      <h1 class="text-xl font-semibold mb-3">Recently played</h1>
+      <div class="flex text-stone-400 mb-2">
+        <div class="w-[40%] text-xs">Artist</div>
+        <div class="w-[45%] text-xs">Track</div>
+        <!--       <div class="w-1/3 text-xs">Album</div> -->
+        <div class="text-xs w-[15%] text-right">Time</div>
+      </div>
+      <ul>
+        @for (scrobble of recentScrobbles; track $index; let i = $index) {
+          <li class="mb-1">
+            <div class="flex items-center">
+              <div class="text-sm w-[40%]">
+                <a class="hover:underline" [routerLink]="['/library', 'artist', normalizeName(scrobble.artist)]">{{
+                  scrobble.artist
+                }}</a>
+              </div>
+              <div class="text-sm w-[45%]">{{ scrobble.name }}</div>
+              <!--        <div class="text-sm w-1/3">{{ scrobble.album ? scrobble.album : "-" }}</div> -->
+              <div class="text-xs w-[15%] text-right text-stone-400">
+                {{ scrobble.timestamp | timestampToDate }}
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
     </div>
-    <ul>
-      @for (scrobble of recentScrobbles; track $index; let i = $index) {
-      <li class="mb-1">
-        <div class="flex items-center">
-          <div class="text-sm w-[40%]">
-            <a class="hover:underline" [routerLink]="['/library', 'artist', normalizeName(scrobble.artist)]">{{
-              scrobble.artist
-            }}</a>
-          </div>
-          <div class="text-sm w-[45%]">{{ scrobble.name }}</div>
-          <!--        <div class="text-sm w-1/3">{{ scrobble.album ? scrobble.album : "-" }}</div> -->
-          <div class="text-xs w-[15%] text-right text-stone-400">
-            {{ scrobble.timestamp | timestampToDate }}
-          </div>
-        </div>
-      </li>
-      }
-    </ul>
+    <app-recent-ratings class="w-[500px] masonry-item mb-10"></app-recent-ratings>
+    <app-backlog class="mb-4 masonry-item"></app-backlog>
+    <app-top-artists class="mb-4 masonry-item" [artists]="topArtists[3]"></app-top-artists>
+    <app-top-albums class="mb-4 masonry-item" [albums]="topAlbums[3]"></app-top-albums>
+    <app-top-categories></app-top-categories>
   </div>
-  <app-recent-ratings class="w-[500px] masonry-item mb-10"></app-recent-ratings>
-  <app-backlog class="mb-4 masonry-item"></app-backlog>
-  <app-top-artists class="mb-4 masonry-item" [artists]="topArtists[3]"></app-top-artists>
-  <app-top-albums class="mb-4 masonry-item" [albums]="topAlbums[3]"></app-top-albums>
-  <app-top-categories></app-top-categories>
-</div>
-<div class="mb-14 flex gap-10">
-  <!-- TODO: ask Leo if calculateBarWidth makes sense to have in HTML which keeps updating shitloads of times -->
-</div>
+  <div class="mb-14 flex gap-10"></div>
 
-<!-- <div class="mb-14 gap-24">
+  <!-- <div class="mb-14 gap-24">
   <app-top-tracks [tracks]="topTracks[3]"></app-top-tracks>
 </div>
  -->
+</div>

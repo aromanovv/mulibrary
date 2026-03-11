@@ -1,9 +1,9 @@
-import { Component, OnInit } from "@angular/core";
-import { ICategoryScrobbles, IScrobble } from "../../../shared/models/scrobble.model";
-import { getTimestampMonthsAgo, getTimestampYearsAgo } from "src/app/shared/utils/date.util";
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
+import { IScrobble } from "../../../shared/models/scrobble.model";
 import { ScrobbleService } from "../../../core/services/scrobble.service";
-import { ChartService } from "src/app/core/services/chart.service";
 import { normalizeName } from "src/app/shared/utils/normalize-name.util";
+import { TimeRangeService } from "src/app/core/services/time-range.service";
+import rangeSlider from "range-slider-input";
 
 @Component({
   selector: "app-home-library",
@@ -22,7 +22,7 @@ export class HomeLibraryComponent implements OnInit {
   topTracks: { [period: number]: IScrobble[] } = {};
 
   constructor(private scrobbleService: ScrobbleService) {}
-  // should you have a multiuse model e.g. scrobble or have smaller ones like ArtistScrobble TrackScrobble etc
+
   ngOnInit(): void {
     // add unsubscribe
     this.scrobbleService
@@ -41,4 +41,15 @@ export class HomeLibraryComponent implements OnInit {
       }); */
     });
   }
+
+  /* 
+  formatRange(value: number[]): string {
+    const [startIndex, endIndex] = value;
+    const start = new Date(this.startDate);
+    start.setMonth(this.startDate.getMonth() + startIndex);
+    const end = new Date(this.startDate);
+    end.setMonth(this.startDate.getMonth() + endIndex);
+    const fmt = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+    return `${fmt.format(start)} → ${fmt.format(end)}`;
+  } */
 }

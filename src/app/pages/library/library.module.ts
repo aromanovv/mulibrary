@@ -1,7 +1,6 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Routes } from "@angular/router";
-import { MainLibraryComponent } from "./main/main-library.component";
 import { SidebarLibraryComponent } from "./sidebar/sidebar-library.component";
 
 import { HomeLibraryComponent } from "./home/home-library.component";
@@ -18,40 +17,34 @@ import { BacklogComponent } from "./home/backlog/backlog.component";
 import { ReactiveFormsModule } from "@angular/forms";
 import { EditAlbumComponent } from "./album/edit-album/edit-album.component";
 import { TopCategoriesComponent } from "./home/top/top-categories/top-categories.component";
+import { TotalListensChartComponent } from "./chart/total-listens-chart/total-listens-chart.component";
 
 const routes: Routes = [
   {
     path: "",
-    component: MainLibraryComponent,
-    children: [
-      {
-        path: "",
-        component: HomeLibraryComponent,
-      },
-      {
-        path: "album/:artist/:album",
-        component: AlbumComponent,
-      },
-      {
-        path: "album/:artist/:album/edit",
-        component: EditAlbumComponent,
-      },
-      {
-        path: "artist/:artist",
-        component: ArtistComponent,
-      },
-      {
-        path: "category/:category",
-        component: CategoryComponent,
-      },
-    ],
+    component: HomeLibraryComponent,
+  },
+  {
+    path: "album/:artist/:album",
+    component: AlbumComponent,
+  },
+  {
+    path: "album/:artist/:album/edit",
+    component: EditAlbumComponent,
+  },
+  {
+    path: "artist/:artist",
+    component: ArtistComponent,
+  },
+  {
+    path: "category/:category",
+    component: CategoryComponent,
   },
 ];
 
 @NgModule({
   declarations: [
     SidebarLibraryComponent,
-    MainLibraryComponent,
     HomeLibraryComponent,
     TopArtistsComponent,
     TopAlbumsComponent,
@@ -63,6 +56,7 @@ const routes: Routes = [
     CategoryComponent,
     BacklogComponent,
     EditAlbumComponent,
+    TotalListensChartComponent,
   ],
   imports: [CommonModule, RouterModule.forChild(routes), SharedModule, CategoryChartComponent, ReactiveFormsModule],
 })

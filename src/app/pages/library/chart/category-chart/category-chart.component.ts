@@ -65,7 +65,10 @@ export class CategoryChartComponent implements OnInit {
   private height = 600 - this.margin.top - this.margin.bottom;
   private width = 0;
   monthRange = 0;
-  constructor(private scrobbleService: ScrobbleService, private timeRangeService: TimeRangeService) {}
+  constructor(
+    private scrobbleService: ScrobbleService,
+    private timeRangeService: TimeRangeService,
+  ) {}
 
   ngOnInit(): void {
     this.scrobbleService.getCategoryScrobbles().subscribe((categories) => {
@@ -81,7 +84,7 @@ export class CategoryChartComponent implements OnInit {
 
   private prepareData(categories: ICategoryScrobbles) {
     const dates = Array.from(
-      new Set(Object.values(categories).flatMap((v) => v.map((d) => new Date(d.date).getTime())))
+      new Set(Object.values(categories).flatMap((v) => v.map((d) => new Date(d.date).getTime()))),
     )
       .map((t) => new Date(t))
       .sort((a, b) => a.getTime() - b.getTime());
@@ -111,9 +114,7 @@ export class CategoryChartComponent implements OnInit {
   private initChart() {
     const element = this.chartContainer.nativeElement;
     d3.select(element).selectAll("*").remove();
-
     this.width = (element.offsetWidth || window.innerWidth) - this.margin.left - this.margin.right;
-
     this.svg = d3
       .select(element)
       .append("svg")
@@ -121,37 +122,22 @@ export class CategoryChartComponent implements OnInit {
       .attr("height", this.height + this.margin.top + this.margin.bottom)
       .append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
-
     this.x = d3
       .scaleTime()
       .domain(d3.extent(this.stackData, (d) => d.date) as [Date, Date])
       .range([0, this.width]);
     this.y = d3.scaleLinear().range([this.height, 0]);
-
     this.area = d3
       .area<any>()
       .x((d) => this.x(d.data.date))
       .y0((d) => this.y(d[0]))
       .y1((d) => this.y(d[1]))
       .curve(d3.curveBasis);
-
-    const tooltip = d3
-      .select(this.chartContainer.nativeElement)
-      .append("div")
-      .style("position", "absolute")
-      .style("pointer-events", "none")
-      .style("background", "rgba(0,0,0,0.7)")
-      .style("color", "#fff")
-      .style("padding", "4px 8px")
-      .style("border-radius", "4px")
-      .style("display", "none");
-
     const series = this.stack(this.stackData);
     this.y.domain([
       d3.min(series, (s: any) => d3.min(s, (d: any) => d[0])),
       d3.max(series, (s: any) => d3.max(s, (d: any) => d[1])),
     ]);
-
     // Draw areas
     this.svg
       .selectAll("path.area")
@@ -168,20 +154,42 @@ export class CategoryChartComponent implements OnInit {
       .on("mouseover", (event: MouseEvent, d: any) => {
         this.svg.selectAll(".area").style("opacity", 0.25);
         d3.select(event.currentTarget as SVGPathElement).style("opacity", 1);
-        tooltip.style("display", "block");
+        tooltip.style("display", null);
+        hoverLine.style("display", null);
       })
       .on("mousemove", (event: MouseEvent, d: any) => {
         const [mx] = d3.pointer(event, this.svg.node());
         const date = this.x.invert(mx);
-        tooltip
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY + 10}px`)
-          .text(`${d.key}, ${date.toLocaleString(undefined, { month: "short", year: "numeric" })}`);
+        tooltip.text(`${d.key} · ${date.toLocaleString(undefined, { month: "short", year: "numeric" })}`);
+        hoverLine.attr("x1", mx).attr("x2", mx);
       })
       .on("mouseleave", (_event: MouseEvent) => {
         tooltip.style("display", "none");
         this.svg.selectAll(".area").style("opacity", 1);
+        hoverLine.style("display", "none");
       });
+    this.svg.selectAll("path.area").data(series).enter().append("path");
+    // ... all your existing area code
+    // Append AFTER areas so it renders on top
+    const hoverLine = this.svg
+      .append("line")
+      .attr("class", "hover-line")
+      .attr("y1", 0)
+      .attr("y2", this.height)
+      .attr("stroke", "rgba(255,255,255,0.5)")
+      .attr("stroke-width", 1)
+      .style("pointer-events", "none")
+      .style("display", "none");
+    const tooltip = this.svg
+      .append("text")
+      .attr("class", "hover-tooltip")
+      .attr("x", this.width - 20)
+      .attr("y", 40)
+      .attr("fill", "#fff")
+      .attr("font-size", "14px")
+      .style("pointer-events", "none")
+      .style("display", "none")
+      .style("text-anchor", "end");
   }
 
   private downsampleData(data: any[], step = 3, minPoints = 12) {
