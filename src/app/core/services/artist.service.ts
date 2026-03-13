@@ -15,7 +15,10 @@ export class ArtistService {
   // TODO: this is huh what?    v
   artistNodes: BehaviorSubject<ITreenode[]> = new BehaviorSubject<ITreenode[]>([]);
 
-  constructor(private http: HttpClient, private supabaseService: SupabaseService) {}
+  constructor(
+    private http: HttpClient,
+    private supabaseService: SupabaseService,
+  ) {}
 
   getArtists(forceReload = false): Observable<any> {
     if (this.artistNodes.value.length === 0 || forceReload) {
@@ -39,20 +42,36 @@ export class ArtistService {
           } else {
             console.error("Request failed with status:", response.status);
           }
-        })
+        }),
       );
   }
 
   getArtistByName(name: string, forceReload = false): Observable<Artist> {
-    if (
-      this.artists.value.length === 0 ||
-      forceReload ||
-      !this.artists.value.find((artist) => artist.category === name)
-    ) {
+    // 1. Normalize the input once for the checks
+    const normalizedSearch = normalizeName(name);
+
+    // 2. Helper function to check both the main name and the other_names array
+    const isMatch = (artist: Artist) => {
+      if (normalizeName(artist.name) === normalizedSearch) return true;
+      if (artist.other_names && artist.other_names.length > 0) {
+        return artist.other_names.some((alias) => normalizeName(alias) === normalizedSearch);
+      }
+      return false;
+    };
+
+    // 3. Check the cache using our new logic (fixed the artist.category bug here!)
+    const foundInCache = this.artists.value.find(isMatch);
+
+    if (this.artists.value.length === 0 || forceReload || !foundInCache) {
       this.fetchArtistByName(name).subscribe();
     }
-    // TODO: add interceptor for various calls to see if anything is being returned incorrectly e.g. this function returns two artists when you should only have one
-    return this.artists.pipe(map((artists) => artists.filter((artist) => normalizeName(artist.name) === name)[0]));
+
+    // 4. Return the first artist that matches the main name OR an alias
+    // 4. Return the first artist that matches, filtering out undefined
+    return this.artists.pipe(
+      map((artists) => artists.find(isMatch)),
+      filter((artist): artist is Artist => !!artist), // <-- This type-guard fixes the error!
+    );
   }
 
   fetchArtistByName(artist: string): any {
@@ -69,7 +88,7 @@ export class ArtistService {
       }),
       tap((response) => {
         this.artists.next(Array.from(new Set([...this.artists.value, ...response])));
-      })
+      }),
     );
   }
 
@@ -90,7 +109,7 @@ export class ArtistService {
       filter((artists) => {
         debug("Getting artists:", artists, "by category", category);
         return artists.length > 0;
-      })
+      }),
     );
   }
 
@@ -115,7 +134,7 @@ export class ArtistService {
         }),
         tap((response) => {
           this.artists.next(Array.from(new Set([...this.artists.value, ...response])));
-        })
+        }),
       );
   }
 }

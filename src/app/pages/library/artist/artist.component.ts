@@ -7,7 +7,6 @@ import { Album } from "src/app/shared/models/album.model";
 import { Artist } from "src/app/shared/models/artist.model";
 import { normalizeName } from "src/app/shared/utils/normalize-name.util";
 import { debug } from "src/app/shared/utils/debug-util";
-import { TreeviewService } from "src/app/core/services/treeview-service";
 
 @Component({
   selector: "app-artist",
