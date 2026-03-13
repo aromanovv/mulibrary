@@ -17,6 +17,7 @@ export interface IAlbum {
   first_listen_date?: number;
   rating?: number;
   review?: string;
+  history?: any[];
 }
 
 export class Album implements IAlbum {
@@ -35,7 +36,8 @@ export class Album implements IAlbum {
     public duration?: number,
     public first_listen_date?: number,
     public rating?: number,
-    public review?: string
+    public review?: string,
+    public history = [],
   ) {
     this.tracks = [];
     this.artwork = [];

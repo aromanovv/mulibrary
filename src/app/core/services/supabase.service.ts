@@ -89,6 +89,13 @@ export class SupabaseService {
     });
   }
 
+  async getArtistAlbumHistory(artistName: string, period: string) {
+    return await this.supabase.rpc("get_artist_album_history", {
+      artist_name_input: artistName,
+      time_interval: period,
+    });
+  }
+
   // Or create specific methods
   async getTopArtists(start_ts: number, end_ts: number) {
     return await this.supabase.rpc("top_artists", {

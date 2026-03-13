@@ -1,47 +1,130 @@
 @if (artist !== undefined) {
-<div class="flex mt-4">
-  <!-- Title and metadata -->
-  <div class="flex-1">
-    <h1 class="text-3xl mb-8 font-semibold leading-6">{{ artist.name }}</h1>
-  </div>
-</div>
-<h3 class="mb-6">Albums</h3>
-<!-- ALBUMS -->
-<div class="flex text-stone-400 mb-2 text-xs">
-  <div class="ml-[90px] md:flex-[0.8] flex-[0.6]">Album/Year</div>
-  <div class="flex-[0.5] md:flex-[0.5]">Rating</div>
-  <div class="flex-[0.25]">Duration</div>
-  <!-- limited width -->
-  <div class="md:flex-1 text-right md:text-left min-w-[40px]">Plays</div>
-  <!-- grows -->
-</div>
-<ul>
-  @for (album of albums; track $index; let i = $index) {
-  <li>
-    <div class="flex mb-2">
-      <div class="text-sm mr-10 h-[50px] w-[50px] hover:cursor-pointer" (click)="navigateToAlbumPage(album)">
-        <img [src]="album.artwork" alt="Album cover" (error)="setPlaceholderAlbumCover()" />
-      </div>
-      <div class="flex items-center flex-1">
-        <div class="md:flex-[0.8] flex-[0.6] hover:cursor-pointer" (click)="navigateToAlbumPage(album)">
-          <h2 class="text-base text-neutral-200">{{ album.name }}</h2>
-          <div class="text-sm text-neutral-400">{{ album.year }}</div>
-        </div>
+  <div class="max-w-7xl mx-auto px-4 md:px-8 pb-20 pt-8">
+    <div class="mb-10">
+      <h1 class="text-xl md:text-3xl font-semibold text-neutral-100 tracking-tight mb-3">{{ artist.name }}</h1>
 
-        <app-rating class="flex-[0.5] md:flex-[0.5]" [rating]="album.rating || 0"></app-rating>
-        <div class="flex-[0.25] text-sm">{{ album.duration | formatDuration }}</div>
-        <div class="md:flex-1 flex items-center text-right md:text-left min-w-[40px]">
-          <div class="text-sm w-[40px] ml-auto md:ml-0">{{ album.scrobbles }}</div>
-          <div class="w-5/6 hidden md:block">
-            <div
-              class="bar bg-teal-900 h-3 mt-px"
-              [style.width.%]="calculateBarWidth(albums, album.scrobbles)"
-            ></div>
+      <div class="flex items-center gap-3 text-sm text-neutral-400">
+        @if (artist.category && artist.category !== "NULL") {
+          <div class="px-2 py-0.5 text-xs uppercase tracking-widest text-neutral-300">
+            {{ artist.category }}
           </div>
-        </div>
+        }
+
+        @if (artist.scrobbles) {
+          <div class="flex items-center gap-1.5">
+            <span class="text-neutral-200 font-medium tabular-nums">{{ artist.scrobbles }}</span>
+            <span>listens</span>
+          </div>
+        }
       </div>
     </div>
-  </li>
-  }
-</ul>
+
+    <div class="mb-16 w-full">
+      @if (isHistoryLoading) {
+        <div
+          class="w-full bg-neutral-800/30 rounded-lg animate-pulse"
+          [style.height]="getHistorySkeletonHeight()"
+        ></div>
+      } @else {
+        <app-ridgeline-chart [data]="artistHistory"></app-ridgeline-chart>
+      }
+    </div>
+
+    <div class="w-full">
+      <div class="flex items-end justify-between mb-6">
+        <h2 class="text-lg font-semibold text-neutral-200 leading-none">Albums</h2>
+
+        <div class="flex items-center gap-4 text-xs font-medium text-neutral-500 uppercase tracking-wider">
+          <button
+            (click)="sortAlbums('year')"
+            class="transition-colors hover:text-neutral-300"
+            [class.text-neutral-100]="currentSort === 'year'"
+          >
+            Year
+          </button>
+          <button
+            (click)="sortAlbums('listens')"
+            class="transition-colors hover:text-neutral-300"
+            [class.text-neutral-100]="currentSort === 'listens'"
+          >
+            Listens
+          </button>
+          <button
+            (click)="sortAlbums('time')"
+            class="transition-colors hover:text-neutral-300"
+            [class.text-neutral-100]="currentSort === 'time'"
+          >
+            Time
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        @for (album of albums; track album.id) {
+          <div
+            class="group flex items-center gap-4 md:gap-6 p-2 -mx-2 rounded-lg hover:bg-neutral-800/40 cursor-pointer transition-colors duration-200"
+            (click)="navigateToAlbumPage(album)"
+          >
+            <div class="w-12 h-12 md:w-14 md:h-14 flex-shrink-0 bg-neutral-800 rounded shadow-sm overflow-hidden">
+              <img
+                [src]="album.artwork"
+                alt="Cover"
+                (error)="setPlaceholderAlbumCover()"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+
+            <div class="flex-1 md:w-1/3">
+              <h3 class="text-sm md:text-base text-neutral-200 group-hover:text-white transition-colors line-clamp-1">
+                {{ album.name }}
+              </h3>
+              <div class="text-xs text-neutral-400 mt-0.5 flex items-center gap-1.5">
+                <span>{{ album.year === null ? "Unknown" : album.year }}</span>
+                <span class="w-0.5 h-0.5 rounded-full bg-neutral-500"></span>
+                <span>{{ album.duration | formatDuration }}</span>
+              </div>
+            </div>
+
+            <div class="hidden md:flex w-16 justify-start items-baseline tabular-nums text-sm">
+              @if (album.rating) {
+                <span class="font-medium text-neutral-300 group-hover:text-neutral-100 transition-colors">
+                  {{ album.rating }}
+                </span>
+                <span class="text-neutral-400 ml-1">/ 10</span>
+              } @else {
+                <span class="text-neutral-500 group-hover:text-neutral-400 transition-colors">-</span>
+                <span class="text-neutral-500 ml-1">/ 10</span>
+              }
+            </div>
+
+            <div class="flex-1 hidden sm:flex items-center pr-4">
+              <div class="flex-1 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-neutral-300 group-hover:bg-white transition-all duration-500 ease-out rounded-full"
+                  [style.width.%]="calculateDynamicBarWidth(album)"
+                ></div>
+              </div>
+            </div>
+
+            <div
+              class="w-12 md:w-16 text-right text-xs md:text-sm font-medium text-neutral-300 tabular-nums group-hover:text-white transition-colors"
+            >
+              @if (currentSort === "time") {
+                {{ getEstimatedHours(album) | number: "1.1-1" }}h
+              } @else {
+                {{ album.scrobbles }}
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="flex items-center justify-center min-h-[50vh]">
+    <div class="flex items-center text-neutral-500 font-mono text-xs md:text-sm">
+      <span>loading</span>
+      <span class="inline-block w-2 h-3 ml-2 bg-neutral-500 animate-pulse"></span>
+    </div>
+  </div>
 }

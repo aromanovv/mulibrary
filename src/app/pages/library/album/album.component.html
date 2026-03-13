@@ -1,114 +1,132 @@
 <ng-container>
-  @if (album !== undefined) {
-  <div class="flex mb-14 mt-4">
-    <!-- Title and metadata -->
-    <div class="flex-1">
-      <div class="flex">
-        <h1 class="text-3xl mb-6 font-semibold leading-6">{{ album.name }}</h1>
-        @if (admin) {<button class="text-sm text-stone-400 mb-3 ml-3" (click)="editAlbum()">edit</button>}
+  <div class="max-w-7xl mx-auto px-4 md:px-8 pt-8">
+    @if (album !== undefined) {
+      <div class="flex mb-14 mt-4">
+        <!-- Title and metadata -->
+        <div class="flex-1">
+          <div class="flex">
+            <h1 class="text-3xl mb-6 font-semibold leading-6">{{ album.name }}</h1>
+            @if (admin) {
+              <button class="text-sm text-stone-400 mb-3 ml-3" (click)="editAlbum()">edit</button>
+            }
+          </div>
+          @if (album && album.rating) {
+            <div class="h-4"><app-rating [rating]="album.rating"></app-rating></div>
+          }
+          <div class="flex text-sm mt-6">
+            <div class="w-40 album-metadata text-stone-400">
+              <div>Artist</div>
+              @if (album.year) {
+                <div>Release date</div>
+              }
+              @if (album.category) {
+                <div>Category</div>
+              }
+              @if (length && length > 0) {
+                <div>Length</div>
+              }
+              @if (trackPlays && trackPlays > 0) {
+                <div>Track plays</div>
+              }
+              @if (albumPlays && albumPlays > 0) {
+                <div>Album plays</div>
+              }
+              @if (tags) {
+                <div>Tags</div>
+              }
+            </div>
+            <div class="album-metadata">
+              <div>
+                @for (artist of album.artist; track $index; let i = $index) {
+                  <a class="hover:underline" [routerLink]="['/library', '/artist', normalizeName(artist)]">{{
+                    artist
+                  }}</a>
+                  @if (i < album.artist!.length - 1) {
+                    <span>, </span>
+                  }
+                }
+              </div>
+              @if (album.year) {
+                <div>{{ album.year }}</div>
+              }
+              @if (album.category) {
+                <div>{{ album.category }}</div>
+              }
+              @if (length && length > 0) {
+                <div>{{ length | formatDuration }}</div>
+              }
+              @if (trackPlays && trackPlays > 0) {
+                <div>{{ trackPlays }}</div>
+              }
+              @if (albumPlays && albumPlays > 0) {
+                <div>{{ albumPlays }}</div>
+              }
+              @if (tags) {
+                <div>Tags</div>
+              }
+            </div>
+          </div>
+        </div>
+        @if (album.artwork) {
+          <div class="h-[300px] w-[300px]">
+            <img [src]="album.artwork" alt="Album cover image" (error)="setPlaceholderAlbumCover()" />
+          </div>
+        }
       </div>
-      @if(album && album.rating) {
-      <div class="h-4"><app-rating [rating]="album.rating"></app-rating></div>
+    }
+    @if (album && album.review) {
+      <div class="mb-10">
+        <div class="text-sm">{{ album.review }}</div>
+      </div>
+    }
+    <h2 class="mb-4">Tracklist</h2>
+    <!-- TRACKS -->
+    <div class="flex text-stone-400 mb-2 text-xs">
+      <div class="w-[20px] mr-2 text-center">#</div>
+      <div class="w-2/5">Title</div>
+      <div class="min-w-[70px]">Duration</div>
+      <div class="flex-1 flex items-center">
+        <div class="text-xs w-[40px] ml-auto">Plays</div>
+        <div class="w-5/6"></div>
+      </div>
+    </div>
+
+    <ul>
+      @for (track of tracks; track $index; let i = $index) {
+        <li>
+          <div class="flex mb-2 items-center">
+            <!-- track number -->
+            <div class="text-sm text-stone-400 w-[20px] text-center mr-2">{{ i + 1 }}</div>
+
+            <!-- track title -->
+            <div class="w-2/5 min-w-0 pr-4 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+              {{ track.name }}
+            </div>
+
+            <!-- duration -->
+            <div class="min-w-[70px] text-sm">{{ track.duration | formatDuration }}</div>
+
+            <!-- plays + bar -->
+            <div class="flex-1 flex items-center">
+              <div class="text-sm w-[40px] ml-auto">{{ track.playcount }}</div>
+              <div class="w-5/6">
+                <div
+                  class="bar bg-teal-900 h-3 mt-px"
+                  [style.width.%]="calculateBarWidth(tracks, track.playcount)"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </li>
       }
-      <div class="flex text-sm mt-6">
-        <div class="w-40 album-metadata text-stone-400">
-          <div>Artist</div>
-          @if (album.year) {
-          <div>Release date</div>
-          } @if (album.category) {
-          <div>Category</div>
-          } @if (length && length > 0) {
-          <div>Length</div>
-          } @if (trackPlays && trackPlays > 0) {
-          <div>Track plays</div>
-          } @if (albumPlays && albumPlays > 0) {
-          <div>Album plays</div>
-          } @if (tags) {
-          <div>Tags</div>
-          }
-        </div>
-        <div class="album-metadata">
-          <div>
-            @for (artist of album.artist; track $index; let i = $index) {
-            <a class="hover:underline" [routerLink]="['/library', '/artist', normalizeName(artist)]">{{ artist }}</a
-            >@if (i < album.artist!.length - 1) {
-            <span>, </span>
-            } }
-          </div>
-          @if (album.year) {
-          <div>{{ album.year }}</div>
-          } @if (album.category) {
-          <div>{{ album.category }}</div>
-          } @if (length && length > 0) {
-          <div>{{ length | formatDuration }}</div>
-          } @if (trackPlays && trackPlays > 0) {
-          <div>{{ trackPlays }}</div>
-          } @if (albumPlays && albumPlays > 0) {
-          <div>{{ albumPlays }}</div>
-          } @if (tags) {
-          <div>Tags</div>
-          }
-        </div>
+    </ul>
+
+    <!-- LISTENING HISTORY -->
+    <div class="flex">
+      <div class="w-2/3"></div>
+      <div class="chart-container max-w-md h-120 mb-14">
+        <canvas id="albumScrobblesByYear">{{ chart }}</canvas>
       </div>
-    </div>
-    @if (album.artwork) {
-    <div class="h-[300px] w-[300px]">
-      <img [src]="album.artwork" alt="Album cover image" (error)="setPlaceholderAlbumCover()" />
-    </div>
-    }
-  </div>
-  } @if (album && album.review) {
-  <div class="mb-10">
-    <div class="text-sm">{{ album.review }}</div>
-  </div>
-  }
-  <h2 class="mb-4">Tracklist</h2>
-  <!-- TRACKS -->
-  <div class="flex text-stone-400 mb-2 text-xs">
-    <div class="w-[20px] mr-2 text-center">#</div>
-    <div class="w-2/5">Title</div>
-    <div class="min-w-[70px]">Duration</div>
-    <div class="flex-1 flex items-center">
-      <div class="text-xs w-[40px] ml-auto">Plays</div>
-      <div class="w-5/6"></div>
-    </div>
-  </div>
-
-  <ul>
-    @for (track of tracks; track $index; let i = $index) {
-    <li>
-      <div class="flex mb-2 items-center">
-        <!-- track number -->
-        <div class="text-sm text-stone-400 w-[20px] text-center mr-2">{{ i + 1 }}</div>
-
-        <!-- track title -->
-        <div class="w-2/5 min-w-0 pr-4 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-          {{ track.name }}
-        </div>
-
-        <!-- duration -->
-        <div class="min-w-[70px] text-sm">{{ track.duration | formatDuration }}</div>
-
-        <!-- plays + bar -->
-        <div class="flex-1 flex items-center">
-          <div class="text-sm w-[40px] ml-auto">{{ track.playcount }}</div>
-          <div class="w-5/6">
-            <div
-              class="bar bg-teal-900 h-3 mt-px"
-              [style.width.%]="calculateBarWidth(tracks, track.playcount)"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </li>
-    }
-  </ul>
-
-  <!-- LISTENING HISTORY -->
-  <div class="flex">
-    <div class="w-2/3"></div>
-    <div class="chart-container max-w-md h-120 mb-14">
-      <canvas id="albumScrobblesByYear">{{ chart }}</canvas>
     </div>
   </div>
 </ng-container>

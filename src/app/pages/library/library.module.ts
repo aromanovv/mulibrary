@@ -18,6 +18,8 @@ import { ReactiveFormsModule } from "@angular/forms";
 import { EditAlbumComponent } from "./album/edit-album/edit-album.component";
 import { TopCategoriesComponent } from "./home/top/top-categories/top-categories.component";
 import { TotalListensChartComponent } from "./chart/total-listens-chart/total-listens-chart.component";
+import { RidgelineChartComponent } from "./chart/rigdeline-chart/ridgeline-chart.component";
+import { LineChartComponent } from './chart/line-chart/line-chart.component';
 
 const routes: Routes = [
   {
@@ -57,6 +59,8 @@ const routes: Routes = [
     BacklogComponent,
     EditAlbumComponent,
     TotalListensChartComponent,
+    RidgelineChartComponent,
+    LineChartComponent,
   ],
   imports: [CommonModule, RouterModule.forChild(routes), SharedModule, CategoryChartComponent, ReactiveFormsModule],
 })

@@ -2,7 +2,6 @@ import { Component, ElementRef, HostListener, OnInit, ViewChild, AfterViewInit }
 import rangeSlider from "range-slider-input";
 import { ScrobbleService } from "src/app/core/services/scrobble.service";
 import { TimeRangeService } from "src/app/core/services/time-range.service";
-import * as d3 from "d3";
 
 @Component({
   selector: "app-total-listens-chart",
@@ -28,10 +27,7 @@ export class TotalListensChartComponent implements OnInit, AfterViewInit {
 
   @ViewChild("lineChart") lineChartRef!: ElementRef<SVGElement>;
 
-  constructor(
-    private scrobbleService: ScrobbleService,
-    private timeRangeService: TimeRangeService,
-  ) {}
+  constructor(private timeRangeService: TimeRangeService) {}
 
   ngOnInit(): void {
     this.containerWidth = window.innerWidth;
@@ -40,13 +36,6 @@ export class TotalListensChartComponent implements OnInit, AfterViewInit {
     this.generateTicks(); // Generate the legend markings
 
     this.timeRangeService.sliderRangeMonths$.subscribe((range) => (this.currentRange = range));
-    this.scrobbleService.getTimelineSliderScrobbles().subscribe((data) => {
-      this.data = data;
-      const n = 2;
-      const sampled = this.data.filter((_: any, i: any) => i % n === 0);
-      this.points = data?.length;
-      this.drawChart(sampled);
-    });
   }
 
   generateTicks() {
@@ -77,42 +66,6 @@ export class TotalListensChartComponent implements OnInit, AfterViewInit {
     }
 
     this.ticks = ticks;
-  }
-
-  drawChart(data: any) {
-    if (!data?.length || !this.lineChartRef) return;
-
-    const el = this.lineChartRef.nativeElement;
-    const width = el.clientWidth || this.containerWidth;
-    const height = 40;
-
-    const svg = d3.select(el).attr("width", width).attr("height", height);
-    svg.selectAll("*").remove();
-
-    const x = d3
-      .scaleTime()
-      .domain(d3.extent(data, (d: any) => new Date(d.quarter)) as [Date, Date])
-      .range([0, width]);
-
-    const y = d3
-      .scalePow()
-      .exponent(1)
-      .domain([0, d3.max(data, (d: any) => +d.listens)!])
-      .range([height, 0]);
-
-    const line = d3
-      .line<any>()
-      .x((d) => x(new Date(d.quarter)))
-      .y((d) => y(Math.max(1, d.listens)))
-      .curve(d3.curveCardinal.tension(0.1));
-
-    svg
-      .append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", "#d4d4d4")
-      .attr("stroke-width", 1.5)
-      .attr("d", line);
   }
 
   @HostListener("window:resize", ["$event"])

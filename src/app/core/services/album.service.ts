@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, catchError, filter, from, map, of, skip } from "rxjs";
+import { BehaviorSubject, Observable, catchError, filter, from, map, of, skip, tap } from "rxjs";
 import { HttpClient } from "@angular/common/http";
 import { SERVER_API_URL } from "src/app/app.constants";
 import { Album } from "src/app/shared/models/album.model";
@@ -11,9 +11,11 @@ import { TimeRangeService } from "./time-range.service";
 
 @Injectable({ providedIn: "root" })
 export class AlbumService {
-  albums: BehaviorSubject<{ [artist_id: string]: Album[] }> = new BehaviorSubject<{ [artist_id: string]: Album[] }>({});
-  discographyFetched: BehaviorSubject<{ [artist_id: string]: boolean }> = new BehaviorSubject<{
-    [artist_id: string]: boolean;
+  albums: BehaviorSubject<{ [artistName: string]: Album[] }> = new BehaviorSubject<{ [artistName: string]: Album[] }>(
+    {},
+  );
+  discographyFetched: BehaviorSubject<{ [artistName: string]: boolean }> = new BehaviorSubject<{
+    [artistName: string]: boolean;
   }>({});
   albumNodes: BehaviorSubject<ITreenode[]> = new BehaviorSubject<ITreenode[]>([]);
   recentReviews: BehaviorSubject<Album[]> = new BehaviorSubject<Album[]>([]);
@@ -23,11 +25,11 @@ export class AlbumService {
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
-    private timeRangeService: TimeRangeService
+    private timeRangeService: TimeRangeService,
   ) {
     this.timeRangeService.sliderRange$
       .pipe(
-        skip(1) // Skip initial value to avoid unnecessary load on service init
+        skip(1), // Skip initial value to avoid unnecessary load on service init
       )
       .subscribe(() => {
         this.fetchBacklog();
@@ -41,7 +43,7 @@ export class AlbumService {
           const updatedAlbums = this.albums.value[artist].map((album) =>
             normalizeName(album.name) === albumName
               ? { ...album, rating: res.data[0].rating, review: res.data[0].review }
-              : album
+              : album,
           );
 
           this.albums.next({
@@ -50,7 +52,51 @@ export class AlbumService {
           });
         }
         return res; // Return the response
-      })
+      }),
+    );
+  }
+
+  getArtistAlbumHistory(artistName: string, period: string, forceReload = false): Observable<Album[]> {
+    debug("getting albums history by artist", artistName, "period", period, "force reload", forceReload);
+
+    if (!this.discographyFetched.value[artistName] || forceReload) {
+      this.fetchArtistAlbumHistory(artistName, period).subscribe();
+    }
+
+    return this.albums.pipe(
+      map((albums) => {
+        return albums[artistName];
+      }),
+      filter((albums) => {
+        return albums && albums.length > 0 && albums[0].history !== undefined;
+      }),
+    );
+  }
+
+  fetchArtistAlbumHistory(artistName: string, period: string) {
+    return from(this.supabaseService.getArtistAlbumHistory(artistName, period)).pipe(
+      tap((response: any) => {
+        if (response && response.status === 200) {
+          const currentAlbums = this.albums.value[artistName] || [];
+
+          const historyLookup = response.data.reduce((acc: any, item: any) => {
+            acc[item.album_id] = item.history;
+            return acc;
+          }, {});
+
+          const updatedAlbums = currentAlbums.map((album: Album) => ({
+            ...album,
+            history: historyLookup[album.id as number] || [],
+          }));
+
+          // Set state using artistName
+          this.albums.value[artistName] = updatedAlbums;
+          this.discographyFetched.value[artistName] = true;
+
+          this.albums.next(this.albums.value);
+          this.discographyFetched.next(this.discographyFetched.value);
+        }
+      }),
     );
   }
 
@@ -75,7 +121,7 @@ export class AlbumService {
           } else {
             console.error("fetchBacklog() request failed with status:", response.status, "Error:", response.error);
           }
-        })
+        }),
       )
       .subscribe();
   }
@@ -99,7 +145,7 @@ export class AlbumService {
         } else {
           console.error("fetchRecentReviews() request failed with status:", response.status, "Error:", response.error);
         }
-      })
+      }),
     );
   }
 
@@ -127,26 +173,8 @@ export class AlbumService {
           } else {
             console.error("Request failed with status:", response.status);
           }
-        })
+        }),
       );
-  }
-
-  getAlbumsByArtistName(artistName: string, forceReload = false): Observable<Album[]> {
-    debug("getting albums by artist", artistName, "force reload", forceReload);
-    if (!this.discographyFetched.value[artistName] || forceReload) {
-      if (forceReload) this.albums.value[artistName] = [];
-      this.fetchAlbumsByArtistName(artistName).subscribe();
-    }
-    return this.albums.pipe(
-      map((albums) => {
-        debug("mapping albums", albums, "by", artistName);
-        return albums[artistName];
-      }),
-      filter((albums) => {
-        debug("Returning albums", albums, "by artist", artistName);
-        return albums && albums.length > 0;
-      })
-    );
   }
 
   getAlbumByName(artist: string, album: string, forceReload = false): Observable<Album | undefined> {
@@ -159,17 +187,19 @@ export class AlbumService {
       filter((albums) => {
         return albums && albums.length > 0;
       }),
-      map((albums) => albums.find((existingAlbum) => normalizeName(existingAlbum.name) === album))
+      map((albums) => albums.find((existingAlbum) => normalizeName(existingAlbum.name) === album)),
     );
   }
 
-  getAlbumById(id: number, artist_id: number): Observable<Album | undefined> {
-    const existingAlbum = this.albums.value[artist_id].find((album) => album.id === id);
+  getAlbumById(id: number, artistName: string): Observable<Album | undefined> {
+    // Look up the album array using the artistName
+    const existingAlbum = this.albums.value[artistName]?.find((album) => album.id === id);
     if (!existingAlbum) {
+      // (Fetch logic here if needed)
     }
     return this.albums.pipe(
-      map((albums) => albums[artist_id]),
-      map((albums) => albums.find((album) => album.id === id))
+      map((albums) => albums[artistName]),
+      map((albums) => albums?.find((album) => album.id === id)),
     );
   }
 
@@ -187,7 +217,7 @@ export class AlbumService {
         } else {
           console.error("Request failed with status:", response.status);
         }
-      })
+      }),
     );
   }
 
@@ -215,6 +245,24 @@ export class AlbumService {
       );
   } */
 
+  getAlbumsByArtistName(artistName: string, forceReload = false): Observable<Album[]> {
+    debug("getting albums by artist", artistName, "force reload", forceReload);
+    if (!this.discographyFetched.value[artistName] || forceReload) {
+      if (forceReload) this.albums.value[artistName] = [];
+      this.fetchAlbumsByArtistName(artistName).subscribe();
+    }
+    return this.albums.pipe(
+      map((albums) => {
+        debug("mapping albums", albums, "by", artistName);
+        return albums[artistName];
+      }),
+      filter((albums) => {
+        debug("Returning albums", albums, "by artist", artistName);
+        return albums && albums.length > 0;
+      }),
+    );
+  }
+
   fetchAlbumsByArtistName(artistName: string): any {
     return from(this.supabaseService.getAlbumsByArtistName(artistName)).pipe(
       catchError((error) => {
@@ -231,7 +279,7 @@ export class AlbumService {
         } else {
           console.error("Request failed with status:", response.status);
         }
-      })
+      }),
     );
   }
 }
