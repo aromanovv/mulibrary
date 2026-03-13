@@ -5,13 +5,9 @@ import { AlbumService } from "src/app/core/services/album.service";
 import { ArtistService } from "src/app/core/services/artist.service";
 import { Album } from "src/app/shared/models/album.model";
 import { Artist } from "src/app/shared/models/artist.model";
-import { calculateBarWidth } from "src/app/shared/utils/calculate-bar-width";
-import { FormatDuration } from "src/app/shared/pipes/format-track-duration";
 import { normalizeName } from "src/app/shared/utils/normalize-name.util";
 import { debug } from "src/app/shared/utils/debug-util";
-import { FlatNode } from "../sidebar/sidebar-library.component";
 import { TreeviewService } from "src/app/core/services/treeview-service";
-import { Genre } from "scripts/local_scan";
 
 @Component({
   selector: "app-artist",
