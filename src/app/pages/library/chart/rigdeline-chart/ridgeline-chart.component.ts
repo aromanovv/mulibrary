@@ -113,6 +113,7 @@ export class RidgelineChartComponent implements OnChanges {
       .append("svg")
       .attr("width", "100%")
       .attr("height", this.height + this.margin.top + this.margin.bottom)
+      .style("overflow", "visible") // <--- ADD THIS LINE!
       .append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 

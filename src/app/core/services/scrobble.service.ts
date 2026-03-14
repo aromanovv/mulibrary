@@ -88,18 +88,15 @@ export class ScrobbleService {
       .subscribe();
   }
 
-  getCategoryArtistsScrobbles(category: string, forceReload = false): Observable<ICategoryScrobbles | null> {
+  getCategoryArtistsScrobbles(category: string, step = 1, forceReload = false): Observable<ICategoryScrobbles | null> {
     if (!this.categoryArtistsScrobbles[category] || forceReload) {
       this.categoryArtistsScrobbles[category] = new BehaviorSubject<ICategoryScrobbles | null>(null);
-      this.fetchCategoryArtistsScrobbles(category);
+      this.fetchCategoryArtistsScrobbles(category, step);
     }
     return this.categoryArtistsScrobbles[category].asObservable();
   }
-  private fetchCategoryArtistsScrobbles(category: string) {
-    const { start_ts, end_ts } = this.timeRangeService.getSliderRange();
-    const startYear = new Date(start_ts * 1000).getUTCFullYear();
-    const endYear = new Date(end_ts * 1000).getUTCFullYear();
-
+  private fetchCategoryArtistsScrobbles(category: string, step: number) {
+    // Call the RPC without specific timestamps to get the full history
     from(this.supabaseService.getCategoryArtists(category))
       .pipe(
         take(1),
@@ -109,30 +106,59 @@ export class ScrobbleService {
             return null;
           }
 
-          // We reuse the ICategoryScrobbles type here, but the keys are Artists
           const artistCountMap: ICategoryScrobbles = {};
 
+          // 1. Find the absolute min and max years dynamically from the returned data
+          // Fallback to 2009 and the current year just in case the data is empty
+          // Fallback bounds
+          let minYear = 2009;
+          let maxYear = new Date().getUTCFullYear(); // ALWAYS use the current year (e.g. 2026)
+
+          if (response.data && response.data.length > 0) {
+            // Find the earliest year in the data
+            const dataMinYear = Math.min(
+              ...response.data.map((r: any) => (r.year ? r.year : new Date(r.date).getUTCFullYear())),
+            );
+
+            // Start either in 2009, or 1 year BEFORE the data starts (guarantees the left side pinches shut)
+            minYear = Math.min(2009, dataMinYear - 1);
+
+            // Find the latest year in the data
+            const dataMaxYear = Math.max(
+              ...response.data.map((r: any) => (r.year ? r.year : new Date(r.date).getUTCFullYear())),
+            );
+
+            // End either on the current year, or the data's last year—whichever is LATER (guarantees the right side pinches shut)
+            maxYear = Math.max(new Date().getUTCFullYear(), dataMaxYear);
+          }
+
           response.data.forEach((r: any) => {
-            // Note: Our RPC returns 'artist', not 'category'
             const { artist, count } = r;
 
-            // Initialize the artist array with 0s if we haven't seen them yet
+            // 2. Initialize the artist array with 0s using our dynamic full-range bounds
             if (!artistCountMap[artist]) {
               artistCountMap[artist] = [];
-              for (let y = startYear; y <= endYear; y++) {
-                for (let month = 0; month <= 11; month += 1) {
+              for (let y = minYear; y <= maxYear; y++) {
+                for (let month = 0; month <= 11; month += step) {
                   artistCountMap[artist].push({ date: new Date(Date.UTC(y, month, 1)), count: 0 });
                 }
               }
             }
 
-            // Find the exact month/year and update the count
+            // Normalize the incoming date safely
+            const rYear = r.year ? r.year : new Date(r.date).getUTCFullYear();
+
+            // If downsampling (step > 1), we "bucket" the month down to the nearest step interval
+            // e.g. if step = 3 (quarterly), month 2 (March) becomes month 0 (Jan).
+            const rawMonth = r.month ? r.month - 1 : new Date(r.date).getUTCMonth();
+            const bucketedMonth = Math.floor(rawMonth / step) * step;
+
             const entry = artistCountMap[artist].find(
-              (e) =>
-                e.date.getTime() ===
-                new Date(Date.UTC(r.year ? r.year : r.date, r.month ? r.month - 1 : 0, 1)).getTime(),
+              (e) => e.date.getTime() === new Date(Date.UTC(rYear, bucketedMonth, 1)).getTime(),
             );
-            if (entry) entry.count = r.count;
+
+            // Use += instead of = just in case we are buckling multiple months into one step!
+            if (entry) entry.count += Number(count);
           });
 
           return artistCountMap;

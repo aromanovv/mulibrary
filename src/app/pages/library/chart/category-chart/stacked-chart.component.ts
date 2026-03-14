@@ -25,18 +25,19 @@ export class StackedChartComponent implements OnChanges {
   @Input() data: any;
   @Input() colors: any;
   @Input() offset: any;
+  @Input() verticalZoom: number = 1; // Default to 1 (normal)
   @Input() routeType: "category" | "artist" = "category";
-  @Input() height: number = 600; // Added Input with default fallback
+  @Input() height: number = 600;
+  @Input() normalize: boolean = false;
 
   private margin = { top: 0, right: 0, bottom: 10, left: 0 };
-  private innerHeight = 0; // Replaced static height with dynamic innerHeight
+  private innerHeight = 0;
   private width = 0;
   monthRange = 0;
 
   constructor(
     private timeRangeService: TimeRangeService,
     private router: Router,
-    private route: ActivatedRoute,
   ) {}
 
   ngOnChanges(): void {
@@ -46,6 +47,20 @@ export class StackedChartComponent implements OnChanges {
     this.updateChart();
 
     this.timeRangeService.sliderRangeMonths$.subscribe((range) => (this.monthRange = range[1] - range[0]));
+  }
+
+  // THE MAGIC ZOOM HELPER
+  private updateYDomain(series: any[]) {
+    const yMin = Number(d3.min(series, (s: any) => d3.min(s, (d: any) => d[0]))) || 0;
+    const yMax = Number(d3.max(series, (s: any) => d3.max(s, (d: any) => d[1]))) || 0;
+
+    const center = (yMax + yMin) / 2;
+    const halfHeight = (yMax - yMin) / 2;
+
+    const zoom = this.verticalZoom && this.verticalZoom > 0 ? Number(this.verticalZoom) : 1;
+
+    // Divide by zoom to make the "window" smaller, zooming IN on the shapes
+    this.y.domain([center - halfHeight / zoom, center + halfHeight / zoom]);
   }
 
   private prepareData(rawData: any, colorMap: any, offset: any) {
@@ -59,23 +74,44 @@ export class StackedChartComponent implements OnChanges {
       const entry: any = { date };
       Object.keys(rawData).forEach((key) => {
         const found = rawData[key].find((d: any) => new Date(d.date).getTime() === date.getTime());
-        entry[key] = found ? found.count : 0;
+
+        let count = found ? found.count : 0;
+
+        // ORGANIC COMPRESSION: If normalize is true, square root the count!
+        if (this.normalize && count > 0) {
+          count = Math.sqrt(count); // You can also try Math.pow(count, 0.4) for even more compression!
+        }
+
+        entry[key] = count;
       });
       return entry;
     });
+
     const colorOrder = Object.keys(colorMap);
     this.keys = Object.keys(rawData).sort((a, b) => colorOrder.indexOf(a) - colorOrder.indexOf(b));
 
-    let step = 2;
-    if (this.monthRange > 12) step = 4;
-    if (this.monthRange > 24) step = 6;
+    const totalMonths = this.stackData.length;
+    let step = 1;
+
+    if (totalMonths >= 144) {
+      step = 6;
+    } else if (totalMonths >= 96) {
+      step = 4;
+    } else if (totalMonths >= 60) {
+      step = 3;
+    } else if (totalMonths >= 24) {
+      step = 2;
+    } else {
+      step = 1;
+    }
+
     this.stackData = this.downsampleData(this.stackData, step, 12);
 
-    // Fallback to wiggle if offset isn't provided
     this.stack = d3
       .stack()
       .keys(this.keys)
       .offset(offset || d3.stackOffsetWiggle);
+
     this.phases = {};
     this.keys.forEach((k) => (this.phases[k] = Math.random() * Math.PI * 2));
   }
@@ -84,10 +120,8 @@ export class StackedChartComponent implements OnChanges {
     const element = this.chartContainer.nativeElement;
     d3.select(element).selectAll("*").remove();
 
-    // 1. Calculate dynamic width and height
     this.width = (element.offsetWidth || window.innerWidth) - this.margin.left - this.margin.right;
 
-    // Check if mobile (under 768px). If so, cap the height at 350px.
     const isMobile = window.innerWidth < 768;
     const actualHeight = isMobile ? Math.min(this.height, 350) : this.height;
     this.innerHeight = actualHeight - this.margin.top - this.margin.bottom;
@@ -97,6 +131,7 @@ export class StackedChartComponent implements OnChanges {
       .append("svg")
       .attr("width", "100%")
       .attr("height", this.innerHeight + this.margin.top + this.margin.bottom)
+      .style("overflow", "visible") // <--- ADD THIS LINE!
       .append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
@@ -115,12 +150,10 @@ export class StackedChartComponent implements OnChanges {
       .curve(d3.curveBasis);
 
     const series = this.stack(this.stackData);
-    this.y.domain([
-      d3.min(series, (s: any) => d3.min(s, (d: any) => d[0])),
-      d3.max(series, (s: any) => d3.max(s, (d: any) => d[1])),
-    ]);
 
-    // 2. Define tooltip elements BEFORE drawing areas so hover events work
+    // Apply the zoom domain here!
+    this.updateYDomain(series);
+
     const hoverLine = this.svg
       .append("line")
       .attr("class", "hover-line")
@@ -142,7 +175,6 @@ export class StackedChartComponent implements OnChanges {
       .style("display", "none")
       .style("text-anchor", "end");
 
-    // 3. Draw areas
     this.svg
       .selectAll("path.area")
       .data(series)
@@ -150,7 +182,8 @@ export class StackedChartComponent implements OnChanges {
       .append("path")
       .attr("class", "area")
       .attr("d", this.area)
-      .attr("fill", (d: any) => this.colors[d.key as keyof typeof this.colors])
+      // ADDED THE HOT PINK FALLBACK COLOR HERE
+      .attr("fill", (d: any) => this.colors[d.key as keyof typeof this.colors] || "#ff0088")
       .style("stroke", "#fff")
       .style("stroke-width", 0.3)
       .style("stroke-linejoin", "round")
@@ -192,10 +225,10 @@ export class StackedChartComponent implements OnChanges {
 
   private updateChart() {
     const series = this.stack(this.stackData);
-    this.y.domain([
-      d3.min(series, (s: any) => d3.min(s, (d: any) => d[0])),
-      d3.max(series, (s: any) => d3.max(s, (d: any) => d[1])),
-    ]);
+
+    // THIS IS WHAT FIXED IT! Using the helper here too so it doesn't overwrite initChart
+    this.updateYDomain(series);
+
     this.svg.selectAll("path.area").data(series).attr("d", this.area);
   }
 
