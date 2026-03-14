@@ -1,7 +1,6 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Routes } from "@angular/router";
-import { SidebarLibraryComponent } from "./sidebar/sidebar-library.component";
 
 import { HomeLibraryComponent } from "./home/home-library.component";
 import { SharedModule } from "src/app/shared/shared.module";
@@ -11,7 +10,7 @@ import { TopTracksComponent } from "./home/top/top-tracks.component";
 import { AlbumComponent } from "./album/album.component";
 import { ArtistComponent } from "./artist/artist.component";
 import { CategoryComponent } from "./category/category.component";
-import { CategoryChartComponent } from "./chart/category-chart/category-chart.component";
+import { StackedChartComponent } from "./chart/category-chart/stacked-chart.component";
 import { RecentRatingsComponent } from "./home/recent/recent-ratings/recent-ratings.component";
 import { BacklogComponent } from "./home/backlog/backlog.component";
 import { ReactiveFormsModule } from "@angular/forms";
@@ -19,7 +18,7 @@ import { EditAlbumComponent } from "./album/edit-album/edit-album.component";
 import { TopCategoriesComponent } from "./home/top/top-categories/top-categories.component";
 import { TotalListensChartComponent } from "./chart/total-listens-chart/total-listens-chart.component";
 import { RidgelineChartComponent } from "./chart/rigdeline-chart/ridgeline-chart.component";
-import { LineChartComponent } from './chart/line-chart/line-chart.component';
+import { LineChartComponent } from "./chart/line-chart/line-chart.component";
 
 const routes: Routes = [
   {
@@ -46,7 +45,6 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
-    SidebarLibraryComponent,
     HomeLibraryComponent,
     TopArtistsComponent,
     TopAlbumsComponent,
@@ -61,7 +59,8 @@ const routes: Routes = [
     TotalListensChartComponent,
     RidgelineChartComponent,
     LineChartComponent,
+    StackedChartComponent,
   ],
-  imports: [CommonModule, RouterModule.forChild(routes), SharedModule, CategoryChartComponent, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule.forChild(routes), SharedModule, ReactiveFormsModule],
 })
 export class LibraryModule {}

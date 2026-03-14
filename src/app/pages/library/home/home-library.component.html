@@ -1,5 +1,12 @@
 <div class="pl-4 pr-4 md:pl-8 md:pr-8 md:mb-8 flex-1 bg-neutral-900 max-w-7xl max-h-[calc(100%-80px)] mx-auto">
-  <app-category-chart></app-category-chart>
+  @if (categories && colors) {
+    <app-stacked-chart
+      [colors]="colors"
+      [data]="categories"
+      [offset]="chartOffset"
+      [routeType]="'category'"
+    ></app-stacked-chart>
+  }
   <app-total-listens-chart></app-total-listens-chart>
 
   <div class="md:columns-2 sm:columns-1 lg:gap-16 md:gap-10">

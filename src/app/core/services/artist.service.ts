@@ -92,7 +92,7 @@ export class ArtistService {
     );
   }
 
-  getArtistsByCategory(category: string, forceReload = false): Observable<Artist[]> {
+  /*   getArtistsByCategory(category: string, forceReload = false): Observable<Artist[]> {
     if (
       this.artists.value.length === 0 ||
       forceReload ||
@@ -136,5 +136,5 @@ export class ArtistService {
           this.artists.next(Array.from(new Set([...this.artists.value, ...response])));
         }),
       );
-  }
+  } */
 }

@@ -16,11 +16,9 @@ import {
 } from "rxjs";
 import { AlbumService } from "src/app/core/services/album.service";
 import { TrackService } from "src/app/core/services/track.service";
-import { TreeviewService } from "src/app/core/services/treeview-service";
 import { Album } from "src/app/shared/models/album.model";
 import { Track } from "src/app/shared/models/track.model";
 import { calculateBarWidth } from "src/app/shared/utils/calculate-bar-width";
-import { FlatNode } from "../sidebar/sidebar-library.component";
 import { ScrobbleService } from "src/app/core/services/scrobble.service";
 import { getCurrentYear } from "src/app/shared/utils/date.util";
 import { SupabaseService } from "src/app/core/services/supabase.service";
@@ -36,11 +34,9 @@ export class AlbumComponent implements OnInit, OnDestroy {
   constructor(
     private albumService: AlbumService,
     private trackService: TrackService,
-    private treeviewService: TreeviewService,
-    private scrobbleService: ScrobbleService,
     private supabaseService: SupabaseService,
     private activatedRoute: ActivatedRoute,
-    private router: Router
+    private router: Router,
   ) {}
   calculateBarWidth = calculateBarWidth;
   normalizeName = normalizeName;
@@ -70,7 +66,7 @@ export class AlbumComponent implements OnInit, OnDestroy {
             ]).pipe(take(1));
           }
           return EMPTY;
-        })
+        }),
       )
       .subscribe(([album, tracks]) => {
         this.length = 0;
@@ -82,7 +78,6 @@ export class AlbumComponent implements OnInit, OnDestroy {
         })); */
         //  this.createChart();
 
-        if (album) this.treeviewService.updateActiveNode(new FlatNode(album.name, 2, album, false, false, true));
         this.tracks = tracks;
         tracks.map((track) => {
           this.length += Number(track.duration) ? Number(track.duration) : 0;

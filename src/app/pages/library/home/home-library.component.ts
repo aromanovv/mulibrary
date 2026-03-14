@@ -1,9 +1,8 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
-import { IScrobble } from "../../../shared/models/scrobble.model";
+import { ICategoryScrobbles, IScrobble } from "../../../shared/models/scrobble.model";
 import { ScrobbleService } from "../../../core/services/scrobble.service";
 import { normalizeName } from "src/app/shared/utils/normalize-name.util";
-import { TimeRangeService } from "src/app/core/services/time-range.service";
-import rangeSlider from "range-slider-input";
+import * as d3 from "d3";
 
 @Component({
   selector: "app-home-library",
@@ -12,10 +11,13 @@ import rangeSlider from "range-slider-input";
   standalone: false,
 })
 export class HomeLibraryComponent implements OnInit {
+  colors: Record<string, string> | null = null;
   normalizeName = normalizeName;
   chart: any;
   periods = [3];
   recentScrobbles: IScrobble[] | null = null;
+  categories: ICategoryScrobbles = {};
+  chartOffset = d3.stackOffsetWiggle;
 
   topArtists: { [period: number]: IScrobble[] } = {};
   topAlbums: { [period: number]: IScrobble[] } = {};
@@ -35,6 +37,13 @@ export class HomeLibraryComponent implements OnInit {
       });
       this.scrobbleService.getTopAlbums(3).subscribe((albums: IScrobble[]) => {
         this.topAlbums[period] = albums;
+      });
+      this.scrobbleService.getCategoryScrobbles().subscribe((categories) => {
+        if (!categories) return;
+        this.categories = categories;
+      });
+      this.scrobbleService.getCategoryColors().subscribe((colors) => {
+        this.colors = colors;
       });
       /*    this.scrobbleService.getTopTracks(getTimestampYearsAgo(period)).subscribe((tracks: IScrobble[]) => {
         this.topTracks[period] = tracks;

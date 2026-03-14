@@ -26,6 +26,11 @@ export class ScrobbleService {
   private timelineScrobbles: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private categoryScrobbles: BehaviorSubject<ICategoryScrobbles | null> =
     new BehaviorSubject<ICategoryScrobbles | null>(null);
+  private categoryColors: BehaviorSubject<Record<string, string> | null> = new BehaviorSubject<Record<
+    string,
+    string
+  > | null>(null);
+  private categoryArtistsScrobbles: { [category: string]: BehaviorSubject<ICategoryScrobbles | null> } = {};
   private topCategoryScrobbles: BehaviorSubject<
     {
       category: string;
@@ -42,13 +47,99 @@ export class ScrobbleService {
   constructor(
     private http: HttpClient,
     private supabaseService: SupabaseService,
-    private timeRangeService: TimeRangeService
+    private timeRangeService: TimeRangeService,
   ) {
+    this.fetchCategoryColors();
     this.timeRangeService.sliderRange$.pipe(skip(1)).subscribe(() => {
       this.fetchCategoryScrobbles();
       this.fetchTopArtists(3);
       this.fetchTopAlbums(3);
     });
+  }
+
+  getCategoryColors(): Observable<Record<string, string> | null> {
+    if (!this.categoryColors.value) {
+      this.fetchCategoryColors();
+    }
+    return this.categoryColors.asObservable();
+  }
+
+  private fetchCategoryColors() {
+    from(this.supabaseService.getCategories())
+      .pipe(
+        map((response) => {
+          if (response.error) {
+            console.error("Error fetching categories:", response.error);
+            return null;
+          }
+
+          // Transform the array of rows into a single dictionary object
+          const colorMap: Record<string, string> = {};
+          response.data.forEach((row: any) => {
+            // Only add if it has a valid color
+            if (row.color && row.color !== "NULL") {
+              colorMap[row.name] = row.color;
+            }
+          });
+          return colorMap;
+        }),
+        tap((colorMap) => this.categoryColors.next(colorMap)),
+      )
+      .subscribe();
+  }
+
+  getCategoryArtistsScrobbles(category: string, forceReload = false): Observable<ICategoryScrobbles | null> {
+    if (!this.categoryArtistsScrobbles[category] || forceReload) {
+      this.categoryArtistsScrobbles[category] = new BehaviorSubject<ICategoryScrobbles | null>(null);
+      this.fetchCategoryArtistsScrobbles(category);
+    }
+    return this.categoryArtistsScrobbles[category].asObservable();
+  }
+  private fetchCategoryArtistsScrobbles(category: string) {
+    const { start_ts, end_ts } = this.timeRangeService.getSliderRange();
+    const startYear = new Date(start_ts * 1000).getUTCFullYear();
+    const endYear = new Date(end_ts * 1000).getUTCFullYear();
+
+    from(this.supabaseService.getCategoryArtists(category))
+      .pipe(
+        take(1),
+        map((response) => {
+          if (response.status !== 200) {
+            console.error("Request failed with status:", response.status, "Error:", response.error);
+            return null;
+          }
+
+          // We reuse the ICategoryScrobbles type here, but the keys are Artists
+          const artistCountMap: ICategoryScrobbles = {};
+
+          response.data.forEach((r: any) => {
+            // Note: Our RPC returns 'artist', not 'category'
+            const { artist, count } = r;
+
+            // Initialize the artist array with 0s if we haven't seen them yet
+            if (!artistCountMap[artist]) {
+              artistCountMap[artist] = [];
+              for (let y = startYear; y <= endYear; y++) {
+                for (let month = 0; month <= 11; month += 1) {
+                  artistCountMap[artist].push({ date: new Date(Date.UTC(y, month, 1)), count: 0 });
+                }
+              }
+            }
+
+            // Find the exact month/year and update the count
+            const entry = artistCountMap[artist].find(
+              (e) =>
+                e.date.getTime() ===
+                new Date(Date.UTC(r.year ? r.year : r.date, r.month ? r.month - 1 : 0, 1)).getTime(),
+            );
+            if (entry) entry.count = r.count;
+          });
+
+          return artistCountMap;
+        }),
+        tap((response) => this.categoryArtistsScrobbles[category].next(response)),
+      )
+      .subscribe();
   }
 
   getTopCategories(): Observable<
@@ -84,7 +175,7 @@ export class ScrobbleService {
         }),
         tap((response) => {
           this.topArtists[period].next(response);
-        })
+        }),
       )
       .subscribe();
   }
@@ -113,7 +204,7 @@ export class ScrobbleService {
         }),
         tap((response) => {
           this.topAlbums[period].next(response);
-        })
+        }),
       )
       .subscribe();
   }
@@ -147,7 +238,7 @@ export class ScrobbleService {
         }),
         tap((response) => {
           this.topTracks[period].next(response);
-        })
+        }),
       );
   }
 
@@ -172,32 +263,32 @@ export class ScrobbleService {
             return null;
           }
 
-          const categoryPercentages: ICategoryScrobbles = {};
+          const categoryCountMap: ICategoryScrobbles = {};
 
           response.data.forEach((r: any) => {
             const { category, year, count } = r;
 
-            if (!categoryPercentages[category]) {
-              categoryPercentages[category] = [];
+            if (!categoryCountMap[category]) {
+              categoryCountMap[category] = [];
               let step = 1;
 
               for (let y = startYear; y <= endYear; y++) {
                 for (let month = 0; month <= 11; month += step) {
-                  categoryPercentages[category].push({ date: new Date(Date.UTC(y, month, 1)), count: 0 });
+                  categoryCountMap[category].push({ date: new Date(Date.UTC(y, month, 1)), count: 0 });
                 }
               }
             }
 
-            const entry = categoryPercentages[category].find(
+            const entry = categoryCountMap[category].find(
               (e) =>
                 e.date.getTime() ===
-                new Date(Date.UTC(r.year ? r.year : r.date, r.month ? r.month - 1 : 0, 1)).getTime()
+                new Date(Date.UTC(r.year ? r.year : r.date, r.month ? r.month - 1 : 0, 1)).getTime(),
             );
             if (entry) entry.count = r.count;
           });
 
           // Calculate top 10 categories
-          const topCategories = Object.entries(categoryPercentages)
+          const topCategories = Object.entries(categoryCountMap)
             .map(([category, entries]) => ({
               category,
               playcount: entries.reduce((sum, e) => sum + e.count, 0),
@@ -207,9 +298,9 @@ export class ScrobbleService {
 
           this.topCategoryScrobbles.next(topCategories);
 
-          return categoryPercentages;
+          return categoryCountMap;
         }),
-        tap((response) => this.categoryScrobbles.next(response))
+        tap((response) => this.categoryScrobbles.next(response)),
       )
       .subscribe();
   }
@@ -233,7 +324,7 @@ export class ScrobbleService {
           console.error("Request failed with status:", response.status);
         }
       }),
-      tap((response) => this.timelineScrobbles.next(response))
+      tap((response) => this.timelineScrobbles.next(response)),
     );
   }
 
@@ -256,7 +347,7 @@ export class ScrobbleService {
           console.error("Request failed with status:", response.status);
         }
       }),
-      tap((response) => this.recentScrobbles.next(response))
+      tap((response) => this.recentScrobbles.next(response)),
     );
   }
 
@@ -272,7 +363,7 @@ export class ScrobbleService {
         } else {
           return EMPTY;
         }
-      })
+      }),
     );
   }
 
@@ -304,7 +395,7 @@ export class ScrobbleService {
           } else {
             console.error("Request failed with status:", response.status);
           }
-        })
+        }),
       );
   }
 }

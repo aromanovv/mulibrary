@@ -10,7 +10,10 @@ import { ScrobbleService } from "src/app/core/services/scrobble.service";
   styleUrl: "./home.component.css",
 })
 export class HomeComponent implements OnInit {
-  constructor(private scrobbleService: ScrobbleService, private albumService: AlbumService) {}
+  constructor(
+    private scrobbleService: ScrobbleService,
+    private albumService: AlbumService,
+  ) {}
   ngOnInit(): void {
     this.albumService.getBacklog().pipe(take(1)).subscribe();
     this.albumService.getRecentReviews().pipe(take(1)).subscribe();

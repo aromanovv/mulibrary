@@ -133,6 +133,15 @@ export class SupabaseService {
     });
   }
 
+  async getCategoryArtists(category: string, artist_limit = 20, start_ts = null, end_ts = null) {
+    return await this.supabase.rpc("get_category_artists_raw", {
+      target_category: category,
+      artist_limit,
+      start_ts,
+      end_ts,
+    });
+  }
+
   async getTimelineSliderScrobbles() {
     return await this.supabase.rpc("get_quarterly_listens");
   }
@@ -149,6 +158,10 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  async getCategories() {
+    return await this.supabase.from("category").select("name, color").order("display_order", { ascending: true });
   }
 
   searchInternal(query: string): Observable<{
